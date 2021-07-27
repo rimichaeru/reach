@@ -29,7 +29,41 @@ The results should have this structure:
  */
 
 module.exports = async function oldestPackageName() {
-  // TODO
+  const fetch = require('node-fetch');
 
-  return name
+  let name;
+
+  const body = {
+    url: 'https://api.npms.io/v2/search/suggestions?q=react',
+    method: 'GET',
+    return_payload: true,
+  };
+
+  await fetch('http://ambush-api.inyourarea.co.uk/ambush/intercept', {
+    method: 'POST',
+    body: JSON.stringify(body),
+    headers: { 'Content-Type': 'application/json' },
+  })
+    .then(response => response.json())
+    .then(data => {
+      const content = data['content'];
+
+      let oldestPackageName = '';
+      let oldestPackageDate = 0;
+
+      for (let i = 0; i < content.length; i++) {
+        let millisecondsDate = Date.parse(content[i]['package']['date']);
+
+        // set initial package date
+        if (oldestPackageDate === 0 || millisecondsDate < oldestPackageDate) {
+          oldestPackageDate = millisecondsDate;
+          oldestPackageName = content[i]['package']['name'];
+        }
+      }
+
+      name = oldestPackageName;
+
+    });
+
+  return name;
 };
